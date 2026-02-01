@@ -1,222 +1,161 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecting You...</title>
+    <title>جاري التحويل...</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700&display=swap" rel="stylesheet">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
     <style>
-        /*
-        ========================================
-        CSS
-        ========================================
-        */
         :root {
-            --main-color: #3b5998; /* الأزرق الاحترافي */
-            --background-color: #1a1a1a; /* خلفية داكنة */
-            --text-color: #f0f0f0; /* نص فاتح */
-            --highlight-color: #4CAF50; /* الأخضر لكلمة survey */
-            --accent-color: #ffeb3b; /* اللكنة الصفراء */
+            --primary: #f59e0b;      /* لون التوهج */
+            --bg-color: #fffdf5;     /* خلفية صفراء خافتة */
+            --track-color: #e5e7eb;  /* لون المسار الرمادي */
+            --text-color: #374151;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
             margin: 0;
             padding: 0;
+            height: 100vh;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            font-family: Arial, sans-serif;
+            background-color: var(--bg-color);
+            font-family: 'Tajawal', sans-serif;
             overflow: hidden;
-            letter-spacing: 0.5px;
-            perspective: 1000px; /* لتمكين الـ 3D */
         }
 
-        /* 1. قسم الرسالة (Message Section) */
-        #redirect-container {
+        .container {
             text-align: center;
-            z-index: 10;
             position: relative;
-            margin-bottom: 40px;
-            /* الوضع الأولي للظهور: مرئي */
-            opacity: 1; 
         }
 
-        #message {
-            font-size: 3em; 
-            font-weight: 300;
-            line-height: 1.2;
-        }
-
-        .highlight {
-            color: var(--highlight-color); 
-            font-weight: 700;
-        }
-        
-        /* 2. قسم العداد (Countdown Section) */
-        #countdown-container {
+        /* تنسيق الدائرة والمؤقت */
+        .timer-wrapper {
             position: relative;
-            z-index: 15;
-            height: 150px; 
-            /* هام: إخفاء العداد في الـ CSS لعدم إرباك المستخدم */
-            opacity: 0; 
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 25px;
         }
 
-        #countdown-number {
-            font-size: 10em; 
-            font-weight: 900;
-            color: var(--accent-color);
-            margin: 0;
-            padding: 0;
-            /* تأثير 3D */
-            text-shadow: 
-                0 0 10px rgba(255, 255, 0, 0.5), 
-                0 0 20px rgba(255, 255, 0, 0.3);
-            /* هام: ابدأ بتحويل بسيط لـ GSAP */
-            transform: scale(1);
-        }
-
-        /* 3. طبقة الانتقال (Transition Layer) */
-        #transition-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
+        .timer-svg {
+            transform: rotate(-90deg); /* البدء من الأعلى */
             width: 100%;
             height: 100%;
-            background-color: var(--main-color);
-            z-index: 20;
-            transform: scaleY(0); 
-            transform-origin: bottom;
+        }
+
+        .circle-bg {
+            fill: none;
+            stroke: var(--track-color);
+            stroke-width: 6;
+        }
+
+        .circle-progress {
+            fill: none;
+            stroke: var(--primary);
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-dasharray: 1; /* لأننا سنستخدم pathLength=1 */
+            stroke-dashoffset: 0;
+            filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.6)); /* التوهج */
+        }
+
+        .count-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* تنسيق النصوص */
+        h1 {
+            font-size: 1.6rem;
+            color: var(--text-color);
+            margin: 0;
+            opacity: 0; /* للأنيميشن عند البدء */
+            transform: translateY(10px);
+        }
+
+        .loading-dots::after {
+            content: ' .';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: ' .'; }
+            40% { content: ' ..'; }
+            60% { content: ' ...'; }
+            80%, 100% { content: ''; }
         }
     </style>
 </head>
 <body>
 
-    <div id="redirect-container">
-        <p id="message" class="loading-animation">
-            You are being redirected to the <span class="highlight">survey</span> page... Be Ready...
-        </p>
+    <div class="container">
+        <div class="timer-wrapper">
+            <svg class="timer-svg" viewBox="0 0 100 100">
+                <circle class="circle-bg" cx="50" cy="50" r="45"></circle>
+                <circle id="progressCircle" class="circle-progress" cx="50" cy="50" r="45" pathLength="1"></circle>
+            </svg>
+            <div id="counter" class="count-display">4</div>
+        </div>
+        <h1 id="message">جاري تحويلك لصفحة طلب المنتج<span class="loading-dots"></span></h1>
     </div>
-
-    <div id="countdown-container">
-        <p id="countdown-number">3</p>
-    </div>
-
-    <div id="transition-overlay"></div>
 
     <script>
-        /*
-        ========================================
-        JavaScript (GSAP Animation)
-        ========================================
-        */
-        document.addEventListener('DOMContentLoaded', () => {
-            const messageElement = document.getElementById('message');
-            const countdownContainer = document.getElementById('countdown-container');
-            const countdownNumber = document.getElementById('countdown-number');
-            const overlayElement = document.getElementById('transition-overlay');
-            const redirectURL = "https://smrturl.co/27b2e64";
+        document.addEventListener("DOMContentLoaded", () => {
+            const redirectUrl = "https://damenkom-orders.com?id=df5204e0-1d01-4b96-a859-1fc9eabe0863";
+            const duration = 4; // مدة العداد بالثواني
             
-            // تحقق من تحميل GSAP
-            if (window.gsap) {
-                
-                const timeline = gsap.timeline({
-                    defaults: { ease: "power2.out" },
-                    onComplete: () => {
-                        // 4. التحويل بعد اكتمال التحريك
-                        window.location.href = redirectURL;
-                    }
-                });
+            const counterElement = document.getElementById("counter");
+            const circleElement = document.getElementById("progressCircle");
+            const messageElement = document.getElementById("message");
 
-                // 1. انيميشن "جاري التحميل" الاحترافي (ظهور الرسالة وتلاشيها)
-                
-                // ابدأ الرسالة مخفية (من الأسفل والشفافية 0)
-                timeline.from(messageElement, {
-                    opacity: 0,
-                    y: 30,
-                    duration: 0.8,
-                    ease: "back.out(1.2)"
-                }, 0.2); // تظهر بعد 0.2 ثانية
+            // 1. إظهار النص بحركة ناعمة
+            gsap.to(messageElement, {
+                opacity: 1,
+                y: 0,
+                duration: 0.8,
+                ease: "power2.out"
+            });
 
-                // تأثير "نبض/وميض" بسيط للرسالة
-                timeline.to(messageElement, {
-                    opacity: 0.8,
-                    y: -10,
-                    duration: 0.3,
-                    repeat: 1, // نبضة واحدة
-                    yoyo: true,
-                    ease: "power1.inOut"
-                }, ">+1.0"); // انتظر 1 ثانية بعد الظهور الكامل
+            // 2. أنيميشن الدائرة (تفريغ الدائرة)
+            gsap.fromTo(circleElement, 
+                { strokeDashoffset: 0 },
+                { 
+                    strokeDashoffset: 1, 
+                    duration: duration, 
+                    ease: "linear" 
+                }
+            );
 
-                // 2. العداد الدرامي (3, 2, 1)
+            // 3. منطق العداد الرقمي
+            let timeLeft = duration;
+            const timerInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft >= 0) {
+                    counterElement.innerText = timeLeft;
+                }
+            }, 1000);
 
-                // إخفاء الرسالة قبل ظهور العداد
-                timeline.to(messageElement, {
-                    opacity: 0,
-                    y: -50,
-                    duration: 0.4,
-                    ease: "power2.in"
-                }, "+=0.5"); // بعد النبض
-
-                // إظهار حاوية العداد لأول مرة
-                timeline.to(countdownContainer, { 
-                    opacity: 1,
-                    duration: 0.3
-                }, "<"); // يبدأ في نفس توقيت اختفاء الرسالة
-
-                // دالة التحديث والتحريك ثلاثي الأبعاد
-                const updateCountdown = (number) => {
-                    // حركة خروج الرقم الحالي (Scale down and rotate)
-                    timeline.to(countdownNumber, {
-                        opacity: 0, 
-                        scale: 0.7, 
-                        rotationX: -90, 
-                        duration: 0.2,
-                        ease: "power1.in"
-                    }, "+=0.8"); // مدة ظهور كل رقم 1 ثانية (0.8 انتظار + 0.2 اختفاء)
-
-                    // تغيير قيمة الرقم
-                    timeline.call(() => {
-                        countdownNumber.textContent = number; 
-                    }, null, "<"); // يتغير في نفس توقيت حركة الخروج
-
-                    // حركة دخول الرقم الجديد (Pop-up 3D)
-                    timeline.fromTo(countdownNumber, 
-                        { opacity: 0, scale: 0.7, rotationX: 90 },
-                        { 
-                            opacity: 1, 
-                            scale: 1, 
-                            rotationX: 0, 
-                            duration: 0.4,
-                            ease: "back.out(1.7)" // تأثير انبثاق قوي
-                        }, "<0.1"); // يبدأ بعد 0.1 ثانية من حركة الخروج
-                };
-
-                // تسلسل العداد: 3 -> 2 -> 1
-                // (الرقم 3 يظهر تلقائياً مع أول حركة دخول)
-                updateCountdown(2); 
-                updateCountdown(1);
-
-                // 3. التحويل النهائي (Transition Wipe)
-                timeline.to(overlayElement, {
-                    scaleY: 1, 
-                    transformOrigin: "bottom",
-                    duration: 0.8,
-                    ease: "power4.inOut"
-                }, "+=1.0"); // انتظر 1 ثانية بعد ظهور الرقم "1"
-
-                
-            } else {
-                // FALLBACK: إذا فشلت GSAP، يتم إظهار الرسالة والتحويل بعد 4 ثوانٍ
-                gsap.set(countdownContainer, { opacity: 0 }); // إخفاء العداد إذا فشل GSAP
-                setTimeout(() => {
-                    window.location.href = redirectURL;
-                }, 4000);
-            }
+            // 4. التحويل عند انتهاء الوقت
+            gsap.delayedCall(duration, () => {
+                clearInterval(timerInterval);
+                window.location.replace(redirectUrl);
+            });
         });
     </script>
 </body>
